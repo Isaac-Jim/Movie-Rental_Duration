@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie Rental Prediction</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      width: 450px;
+      max-width: 90%;
+    }
+    h2 {
+      text-align: center;
+      color: #1f2937;
+      margin-bottom: 25px;
+    }
+    fieldset {
+      border: 1px solid #d1d5db;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    legend {
+      font-weight: bold;
+      padding: 0 5px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+      color: #374151;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      transition: border 0.2s;
+    }
+    input:focus {
+      border-color: #2563eb;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #1e40af;
+    }
+    .result {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #16a34a;
+    }
+    .loading {
+      text-align: center;
+      color: #2563eb;
+      font-weight: bold;
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Movie Rental Prediction</h2>
+    <form id="predictForm">
+      <fieldset>
+        <legend>Basic Info</legend>
+        <label for="amount">Amount</label>
+        <input type="number" step="any" id="amount" required>
+
+        <label for="release_year">Release Year</label>
+        <input type="number" id="release_year" min="1900" max="2100" required>
+
+        <label for="rental_rate">Rental Rate</label>
+        <input type="number" step="any" id="rental_rate" required>
+
+        <label for="length">Length</label>
+        <input type="number" step="any" id="length" required>
+
+        <label for="replacement_cost">Replacement Cost</label>
+        <input type="number" step="any" id="replacement_cost" required>
+      </fieldset>
+
+      <fieldset>
+        <legend>Ratings</legend>
+        <label for="NC_17">NC-17</label>
+        <input type="number" id="NC_17" min="0" required>
+
+        <label for="PG">PG</label>
+        <input type="number" id="PG" min="0" required>
+
+        <label for="PG_13">PG-13</label>
+        <input type="number" id="PG_13" min="0" required>
+
+        <label for="R">R</label>
+        <input type="number" id="R" min="0" required>
+      </fieldset>
+
+      <fieldset>
+        <legend>Additional Features</legend>
+        <label for="amount_2">Amount 2</label>
+        <input type="number" step="any" id="amount_2" required>
+
+        <label for="length_2">Length 2</label>
+        <input type="number" step="any" id="length_2" required>
+
+        <label for="rental_rate_2">Rental Rate 2</label>
+        <input type="number" step="any" id="rental_rate_2" required>
+
+        <label for="deleted_scenes">Deleted Scenes</label>
+        <input type="number" id="deleted_scenes" min="0" required>
+
+        <label for="behind_the_scenes">Behind the Scenes</label>
+        <input type="number" id="behind_the_scenes" min="0" required>
+      </fieldset>
+
+      <button type="submit">Predict</button>
+      <div class="loading" id="loading">Predicting...</div>
+    </form>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("predictForm");
+    const resultDiv = document.getElementById("result");
+    const loadingDiv = document.getElementById("loading");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      resultDiv.textContent = "";
+      loadingDiv.style.display = "block";
+
+      const payload = {
+        amount: parseFloat(document.getElementById("amount").value),
+        release_year: parseFloat(document.getElementById("release_year").value),
+        rental_rate: parseFloat(document.getElementById("rental_rate").value),
+        length: parseFloat(document.getElementById("length").value),
+        replacement_cost: parseFloat(document.getElementById("replacement_cost").value),
+        NC_17: parseInt(document.getElementById("NC_17").value),
+        PG: parseInt(document.getElementById("PG").value),
+        PG_13: parseInt(document.getElementById("PG_13").value),
+        R: parseInt(document.getElementById("R").value),
+        amount_2: parseFloat(document.getElementById("amount_2").value),
+        length_2: parseFloat(document.getElementById("length_2").value),
+        rental_rate_2: parseFloat(document.getElementById("rental_rate_2").value),
+        deleted_scenes: parseInt(document.getElementById("deleted_scenes").value),
+        behind_the_scenes: parseInt(document.getElementById("behind_the_scenes").value),
+      };
+
+      try {
+        const res = await fetch("https://movie-rental-duration-api.onrender.com/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("Server error or invalid input.");
+
+        const data = await res.json();
+        resultDiv.textContent = "Predicted Rental Duration: " + data.prediction;
+      } catch (err) {
+        resultDiv.textContent = "Error: " + err.message;
+        resultDiv.style.color = "#dc2626";
+      } finally {
+        loadingDiv.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
